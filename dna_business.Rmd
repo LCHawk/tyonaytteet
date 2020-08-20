@@ -1,0 +1,59 @@
+---
+title: "dna"
+author: "Kristian Vepsäläinen"
+date: "19 8 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rtweet)
+# plotting and pipes - tidyverse!
+library(ggplot2)
+library(dplyr)
+# text mining library
+library(tidytext)
+# plotting packages
+library(igraph)
+library(ggraph)
+library(knitr)
+library(kableExtra)
+twitter_token <- create_token(
+  app = "R_Mining_vepsalainen",
+  consumer_key = "LxEY0mN0bHBSOwzkrXDHIr2Cq",
+  consumer_secret = "ykfCADO1gy2aYOouaIIDlF4o2pYeEgXaZ3h8XeSALFMXPfOlct",
+  access_token = "2895886803-azmz9Y6NhhvzSvn6QrTDi36XuHKaRbO4dtnOTlQ",
+  access_secret = "EVAkTI1KL7nfv90e6kfxkKR8XEfGTupA0EaXwZxgKL6f8")
+
+dna <-get_timeline("DNA_Business", n =3000)
+```
+
+# DNA_Business-twittertilin analyysiä
+Analysoidaan kyseistä Twitter-tilin 3000 edellistä twittiä.
+
+```{r echo = FALSE,message=FALSE}
+#Käsitellään tykkäyksiä
+perustiedot <- data.frame(c("Tykätty, %","Yhteensä","Vähiten","Eniten","Keskiarvo","Mediaani","Alakvartiili","Yläkvartiili"),c(round(sum(if_else(dna$favorite_count>0,1,0)/3000*100),1),round(sum(dna$favorite_count),0),min(dna$favorite_count),max(dna$favorite_count),round(mean(dna$favorite_count),1),median(dna$favorite_count),quantile(dna$favorite_count,.25),quantile(dna$favorite_count,.75)))
+
+names(perustiedot)<-c("","")
+
+kable(perustiedot,caption = "Tykkäysten määrä ja hajontalukuja") %>% kable_styling()
+
+perustiedot <- data.frame(c("Uudellentwiitattu, %","Yhteensä","Vähiten","Eniten","Keskiarvo","Mediaani","Alakvartiili","Yläkvartiili"),c(round(sum(if_else(dna$retweet_count>0,1,0)/3000*100),1),round(sum(dna$retweet_count),0),min(dna$retweet_count),max(dna$retweet_count),round(mean(dna$retweet_count),1),median(dna$retweet_count),quantile(dna$retweet_count,.25),quantile(dna$retweet_count,.75)))
+
+names(perustiedot)<-c("","")
+
+kable(perustiedot,caption = "Jakojen määrä ja hajontalukuja") %>% kable_styling()
+
+
+ggplot(dna,aes(x=favorite_count, y = retweet_count))+geom_point()+geom_smooth(method = "gam")+ggtitle("Tykkäysten ja uudelleenjakojen välinen suhde")+xlab("Tykkäysten määrä")+ylab("Jakojen määrä")
+
+```
+
+## Postausten määrä
+Alla olevassa kuvaajassa on postausten määrä päivittäin.
+
+```{r echo = FALSE}
+rtweet::ts_plot(dna,"days")
+```
+
